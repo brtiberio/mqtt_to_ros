@@ -25,10 +25,12 @@ import roslibpy
 import logging
 import argparse
 import sys
-import time
 import signal
 import paho.mqtt.client as mqtt
 from time import sleep
+
+import pydevd
+pydevd.settrace('localhost', port=8000, stdoutToServer=True, stderrToServer=True)
 
 # General topics
 general_topics = {'canopen': 'VIENA/General/canopen',  # canopen status
@@ -46,6 +48,7 @@ sinamics_topics = {'connected': 'VIENA/SINAMICS/connected',  # inverter connecte
                    'target_velocity_write': 'VIENA/SINAMICS/target_velocity/write',  # target velocity write
                    }
 # epos_topics = {}
+
 
 class MQTTHandler(logging.Handler):
     """
@@ -96,7 +99,7 @@ class MqttRosBridge:
             self.log_info()
 
         self.client_ros = roslibpy.Ros(host=hostname, port=port)
-        self.client_ros.on_ready(self.ros_on_ready())
+        self.client_ros.on_ready(self.ros_on_ready)
 
     def ros_on_ready(self):
         self.ros_online = self.client_ros.is_connected
@@ -151,16 +154,17 @@ class MqttRosBridge:
         # if not present, create it.
         self.ros_subscribers.setdefault(ros_topic_name, {})
         # check if is already present
-        if not self.ros_subscribers[ros_topic_name]:
-            if not (self.ros_subscribers[ros_topic_name]['ros_topic'] is None):
-                # is callback the same?
-                if self.ros_subscribers[ros_topic_name]['callback'] == callback:
-                    # do nothing, return
-                    return True
-                # else unsubscribe
-                self.ros_subscribers[ros_topic_name]['ros_topic'].unsubscribe()
+        # if not self.ros_subscribers[ros_topic_name]:
+        #     if not (self.ros_subscribers[ros_topic_name]['ros_topic'] is None):
+        #         # is callback the same?
+        #         if self.ros_subscribers[ros_topic_name]['callback'] == callback:
+        #             # do nothing, return
+        #             return True
+        #         # else unsubscribe
+        #         self.ros_subscribers[ros_topic_name]['ros_topic'].unsubscribe()
         # else is empty or different callback
         # create topic handler
+        ros_topic_name = "/" + ros_topic_name
         ros_topic = roslibpy.Topic(self.client_ros, ros_topic_name, ros_msg_type)
         # set or update
         self.ros_subscribers[ros_topic_name]=self.create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback)
@@ -175,15 +179,16 @@ class MqttRosBridge:
         # if not present, create it.
         self.mqtt_subscribers.setdefault(mqtt_topic, {})
         # check if is already present
-        if not self.mqtt_subscribers[ros_topic_name]:
-            if not (self.mqtt_subscribers[ros_topic_name]['ros_topic'] is None):
-                if self.mqtt_subscribers[ros_topic_name]['mqtt_topic'] == mqtt_topic:
-                    # do nothing, return
-                    return True
-                # if different, unsubscribe
-                self.client_mqtt.unsubscribe(self.mqtt_subscribers[ros_topic_name]['mqtt_topic'])
+        # if not self.mqtt_subscribers[ros_topic_name]:
+        #     if not (self.mqtt_subscribers[ros_topic_name]['ros_topic'] is None):
+        #         if self.mqtt_subscribers[ros_topic_name]['mqtt_topic'] == mqtt_topic:
+        #             # do nothing, return
+        #             return True
+        #         # if different, unsubscribe
+        #         self.client_mqtt.unsubscribe(self.mqtt_subscribers[ros_topic_name]['mqtt_topic'])
         # else is empty or different mqtt_topic
         # create topic handler
+        ros_topic_name = "/" + ros_topic_name
         ros_topic = roslibpy.Topic(self.client_ros, ros_topic_name, ros_msg_type)
         # set or update
         self.mqtt_subscribers[mqtt_topic] = self.create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback=None)
@@ -235,6 +240,7 @@ class SimpleController(MqttRosBridge):
                                  payload=var.to_bytes(4, 'little', signed=True))
 
 def main():
+    global controller
     # ---------------------------------------------------------------------------
     # define signal handlers for systemd signals
     # ---------------------------------------------------------------------------
@@ -249,10 +255,15 @@ def main():
     # Defines of callback functions
     # ---------------------------------------------------------------------------
 
-    def on_message(self, userdata, message):
+    def on_message(client, userdata, message):
         # TODO: parse messages
-        self.log_debug("Received message :" + str(message.payload) + " on topic "
-                     + message.topic + " with QoS " + str(message.qos))
+        controller.log_debug("Received message :" + str(message.payload) + " on topic "
+                             + message.topic + " with QoS " + str(message.qos))
+        if message.topic == sinamics_topics['velocity']:
+            number = int.from_bytes(message.payload, 'little', signed=True)
+            ros_message = roslibpy.Message({'data': str(number)})
+            controller.mqtt_subscribers[sinamics_topics['velocity']]['ros_topic'].publish(ros_message)
+
 
     def on_connect(self, userdata, flags, rc):
         if rc == 0:
@@ -289,9 +300,9 @@ def main():
     parser.add_argument('--port_ros', action='store', default=9090, type=int,
                         help='port for ros bridge', dest='port_ros')
     parser.add_argument('--hostname_mqtt', action='store', default='raspberrypi.local', type=str,
-                        help='hostname for mqtt broker', dest='hostname_broker')
+                        help='hostname for mqtt broker', dest='hostname_mqtt')
     parser.add_argument('--port_mqtt', action='store', default=8080, type=int,
-                        help='port for mqtt broker', dest='port_broker')
+                        help='port for mqtt broker', dest='port_mqtt')
     parser.add_argument('--transport', action='store', default='websockets', type=str,
                         help='transport layer used in ros bridge', dest='transport')
     parser.add_argument("--log-level", action="store", type=str,
@@ -337,16 +348,13 @@ def main():
     # create mqtt client
     controller.client_mqtt = mqtt.Client(protocol=mqtt.MQTTv311, transport=transport)
     # set callbacks for mqtt
-    controller.client_mqtt.on_connect=on_connect
     controller.client_mqtt.on_connect = on_connect
     controller.client_mqtt.on_message = on_message
     controller.client_mqtt.on_disconnect = on_disconnect
     controller.client_mqtt.clean_exit = controller.clean_exit
 
     # create ros client
-    controller.client_ros = roslibpy.Ros(host=hostname_ros, port=port_ros)
-    # set callback for ros on ready
-    controller.client_ros.on_ready(controller.ros_on_ready)
+    controller.begin_ros_client(hostname_ros, port_ros)
     # run ros client non-blocking
     controller.client_ros.run()
 
@@ -386,6 +394,7 @@ def main():
         while True:
             if not controller.client_ros.is_connected:
                 controller.log_info('Not connected!')
+                controller.client_ros.connect()
             sleep(1)
     except KeyboardInterrupt as e:
         logging.info('[Main] Got exception {0}... exiting now'.format(e))

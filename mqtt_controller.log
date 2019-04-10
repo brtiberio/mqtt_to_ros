@@ -1,81 +1,20 @@
-[03-04-2019 12:22:01.004] [root                ]: INFO     waiting a bit to connect to server...
-[03-04-2019 12:22:01.036] [roslibpy            ]: INFO     Connection to ROS MASTER ready.
-[03-04-2019 12:22:01.040] [root                ]: INFO     Is ROS connected? True
-[03-04-2019 12:22:07.282] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:07.283] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:07.284] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:07.288] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:07.377] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:07.794] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:07.795] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:07.795] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:07.870] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:08.099] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:08.408] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:08.412] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:08.723] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:08.724] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:09.021] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:09.022] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:09.103] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:09.330] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:09.634] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:09.731] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:10.150] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:10.151] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:10.456] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:10.479] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:10.776] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:10.777] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:10.846] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:11.072] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:11.382] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:11.383] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:11.686] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:11.719] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:11.993] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:12.307] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:12.341] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:12.604] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:12.680] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:12.916] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:12.917] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:13.221] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:13.528] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:13.535] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:13.836] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:13.876] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:14.194] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:14.215] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:14.454] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:14.771] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:14.833] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:15.086] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:15.162] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:15.271] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:15.576] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:15.884] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:15.885] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:16.191] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:16.192] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:16.498] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:16.559] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:16.805] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:16.892] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:17.005] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:17.316] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:17.341] [root                ]: INFO     Received message: 500
-[03-04-2019 12:22:17.625] [root                ]: INFO     Received message: 1000
-[03-04-2019 12:22:17.964] [roslibpy            ]: INFO     WebSocket connection closed: Code=1006, Reason=connection was closed uncleanly (peer dropped the TCP connection without previous WebSocket closing handshake)
-[03-04-2019 12:22:17.965] [twisted             ]: INFO     <twisted.internet.tcp.Connector object at 0x7fa994701e48> will retry in 2 seconds
-[03-04-2019 12:22:17.966] [twisted             ]: INFO     Stopping factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:20.871] [twisted             ]: INFO     Starting factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:20.905] [twisted             ]: INFO     <twisted.internet.tcp.Connector object at 0x7fa994701e48> will retry in 8 seconds
-[03-04-2019 12:22:20.905] [twisted             ]: INFO     Stopping factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:29.430] [twisted             ]: INFO     Starting factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:29.695] [twisted             ]: INFO     <twisted.internet.tcp.Connector object at 0x7fa994701e48> will retry in 20 seconds
-[03-04-2019 12:22:29.696] [twisted             ]: INFO     Stopping factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:49.706] [twisted             ]: INFO     Starting factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:49.782] [twisted             ]: INFO     <twisted.internet.tcp.Connector object at 0x7fa994701e48> will retry in 53 seconds
-[03-04-2019 12:22:49.783] [twisted             ]: INFO     Stopping factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7fa994701da0>
-[03-04-2019 12:22:53.828] [root                ]: INFO     [Main] Got exception ... exiting now
+[10-04-2019 13:36:41.036] [roslibpy            ]: INFO     Connection to ROS MASTER ready.
+[10-04-2019 13:36:41.064] [MQTT_ROS            ]: INFO     [SimpleController:ros_on_ready] ROS client is True
+[10-04-2019 13:36:41.248] [root                ]: INFO     waiting a bit to connect to server...
+[10-04-2019 13:38:28.094] [roslibpy            ]: INFO     WebSocket connection closed: Code=1006, Reason=connection was closed uncleanly (peer dropped the TCP connection without previous WebSocket closing handshake)
+[10-04-2019 13:38:28.095] [twisted             ]: INFO     Stopping factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7f4613590978>
+[10-04-2019 13:38:28.374] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:28.376] [twisted             ]: INFO     Starting factory <roslibpy.comm.comm_autobahn.AutobahnRosBridgeClientFactory object at 0x7f4613590978>
+[10-04-2019 13:38:29.379] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:30.380] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:31.382] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:32.384] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:33.386] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:34.387] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:35.390] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:36.392] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:37.394] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:38.396] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:39.399] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:40.402] [MQTT_ROS            ]: INFO     [SimpleController:main] Not connected!
+[10-04-2019 13:38:41.224] [root                ]: INFO     [Main] Got exception ... exiting now
