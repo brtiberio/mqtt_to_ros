@@ -29,22 +29,22 @@ import signal
 import paho.mqtt.client as mqtt
 from time import sleep
 
-import pydevd
-pydevd.settrace('localhost', port=8000, stdoutToServer=True, stderrToServer=True)
+# import pydevd
+# pydevd.settrace('localhost', port=8000, stdoutToServer=True, stderrToServer=True)
 
 # General topics
-general_topics = {'canopen': 'VIENA/General/canopen',  # canopen status
-                  'rpi':     'VIENA/General/rpi',      # rpi client connected
-                  'log':     'VIENA/General/log',      # logger topic
-                  'mqtt_ros':'VIENA/General/mqtt_ros'  # mqtt to ros bridge status
+general_topics = {'canopen':  'VIENA/General/canopen',  # canopen status
+                  'rpi':      'VIENA/General/rpi',      # rpi client connected
+                  'log':      'VIENA/General/log',      # logger topic
+                  'mqtt_ros': 'VIENA/General/mqtt_ros'  # mqtt to ros bridge status
                   }
-# SINAMICS MQTT Topics
-sinamics_topics = {'connected': 'VIENA/SINAMICS/connected',  # inverter connected status
-                   'velocity': 'VIENA/SINAMICS/velocity',  # estimated velocity
-                   'state_read': 'VIENA/SINAMICS/state/read',  # state from inverter to others
-                   'state_write': 'VIENA/SINAMICS/state/write',  # state from others to inverter
-                   'EMCY': 'VIENA/SINAMICS/EMCY',  # print emergency messages
-                   'target_velocity_read': 'VIENA/SINAMICS/target_velocity/read',  # target velocity read
+# SINAMICS Topics
+sinamics_topics = {'connected':             'VIENA/SINAMICS/connected',  # inverter connected status
+                   'velocity':              'VIENA/SINAMICS/velocity',  # estimated velocity
+                   'state_read':            'VIENA/SINAMICS/state/read',  # state from inverter to others
+                   'state_write':           'VIENA/SINAMICS/state/write',  # state from others to inverter
+                   'EMCY':                  'VIENA/SINAMICS/EMCY',  # print emergency messages
+                   'target_velocity_read':  'VIENA/SINAMICS/target_velocity/read',  # target velocity read
                    'target_velocity_write': 'VIENA/SINAMICS/target_velocity/write',  # target velocity write
                    }
 # epos_topics = {}
@@ -74,7 +74,15 @@ class MQTTHandler(logging.Handler):
 
 
 class MqttRosBridge:
+    """
+    Class to implement a bridge from ros to mqtt topics or vice versa for VIENA project
+    Still in development and updated as necessary.
+    Requires the counterpart rosbridge server to be running so the constructed client can connect to it.
+    Connection is made using websockets protocol ( by default) via twisted package
 
+    Args:
+        debug: A boolean to use logging debug level or not. Default is false
+    """
     def __init__(self, debug=False):
         # keep track of online status of devices and servers
         self.mqtt_online = False
@@ -94,16 +102,32 @@ class MqttRosBridge:
         self.mqtt_subscribers = {}
         return
 
-    def begin_ros_client(self, hostname=None, port=None ):
-        if not all([hostname,port]):
-            self.log_info()
+    def begin_ros_client(self, hostname=None, port=None):
+        """
+        Instanciate ROS client with given hostname and connection port
+
+        Args:
+            hostname: rosbridge server ip address or hostname
+            port: port number for rosbridge server
+        Return:
+            A boolean if successfully setup or not
+        """
+        if not all([hostname, port]):
+            self.log_info("Hostname or port not supplied")
+            return False
 
         self.client_ros = roslibpy.Ros(host=hostname, port=port)
         self.client_ros.on_ready(self.ros_on_ready)
 
     def ros_on_ready(self):
+        """
+        Update current status of ros client connection
+        """
         self.ros_online = self.client_ros.is_connected
-        self.log_info('ROS client is {0}'.format(self.ros_online))
+        if self.ros_online:
+            self.log_info('ROS client is online')
+        else:
+            self.log_info('ROS client is offline')
 
     def log_info(self, message=None):
         """ Log a message
@@ -148,61 +172,119 @@ class MqttRosBridge:
         return
 
     def add_ros_to_mqtt(self, ros_topic_name, ros_msg_type, mqtt_topic, callback):
+        """
+        Subscribe to a ros topic and associate a callback to be used when a message is received
+        in order to forward it to the corresponding mqtt topic. Data will be appended to a ros_subscribers
+        dictionary where the key is the name of the ros topic. The value associated at each key is also a
+        dictionary containing the following\:
+
+        +-------------+---------------------------------------------------------+
+        |ros_topic    | a roslibpy.Topic                                        |
+        +-------------+---------------------------------------------------------+
+        |ros_msg_type | message type of ROS topic                               |
+        +-------------+---------------------------------------------------------+
+        |mqtt_topic   | mqtt corresponding topic where message is to be forward |
+        +-------------+---------------------------------------------------------+
+        |callback     | function handler to be called on message received       |
+        +-------------+---------------------------------------------------------+
+
+        Args:
+            ros_topic_name: name of the ros topic to be subscribed
+            ros_msg_type: type of message in ros topic
+            mqtt_topic: corresponding mqtt topic to be forwarded
+            callback: handler for the function callback to be used when message is received.
+        Return:
+            A boolean in case of success or not
+        """
+        # for sanity check
         if self.client_ros is None or self.client_mqtt is None:
             self.log_info("ROS or MQTT client not yet created")
             return False
         # if not present, create it.
         self.ros_subscribers.setdefault(ros_topic_name, {})
-        # check if is already present
-        # if not self.ros_subscribers[ros_topic_name]:
-        #     if not (self.ros_subscribers[ros_topic_name]['ros_topic'] is None):
-        #         # is callback the same?
-        #         if self.ros_subscribers[ros_topic_name]['callback'] == callback:
-        #             # do nothing, return
-        #             return True
-        #         # else unsubscribe
-        #         self.ros_subscribers[ros_topic_name]['ros_topic'].unsubscribe()
-        # else is empty or different callback
-        # create topic handler
+        # ros seems to require a path starting always with "/". TODO: to be check if true
         ros_topic_name = "/" + ros_topic_name
+        # create the topic handler
         ros_topic = roslibpy.Topic(self.client_ros, ros_topic_name, ros_msg_type)
         # set or update
-        self.ros_subscribers[ros_topic_name]=self.create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback)
-        # create subscription
+        self.ros_subscribers[ros_topic_name] = self.create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback)
+        # perform subscription
         self.ros_subscribers[ros_topic_name]['ros_topic'].subscribe(callback)
         return True
 
     def add_mqtt_to_ros(self, ros_topic_name, ros_msg_type, mqtt_topic, qos=0):
+        """
+        Subscribe to a mqtt topic and associate the corresponding ros topic to be used
+        when a message is received. Data will be appended to a mqtt_subscribers dictionary
+        where the key is the name of the ros topic. The value associated at each key is also a
+        dictionary containing the following\:
+
+        +-------------+---------------------------------------------------------+
+        |ros_topic    | a roslibpy.Topic                                        |
+        +-------------+---------------------------------------------------------+
+        |ros_msg_type | message type of ROS topic                               |
+        +-------------+---------------------------------------------------------+
+        |mqtt_topic   | mqtt corresponding topic where message is to be forward |
+        +-------------+---------------------------------------------------------+
+        |callback     | None. Not currently used                                |
+        +-------------+---------------------------------------------------------+
+
+        Args:
+            ros_topic_name: name of the ros topic to be subscribed
+            ros_msg_type: type of message in ros topic
+            mqtt_topic: corresponding mqtt topic to be forwarded
+            qos: quality of service when subscribed. Default to zero.
+        Return:
+            A boolean in case of success or not
+        """
+        # for sanity check
         if self.client_ros is None or self.client_mqtt is None:
             self.log_info("ROS or MQTT client not yet created")
             return False
         # if not present, create it.
         self.mqtt_subscribers.setdefault(mqtt_topic, {})
-        # check if is already present
-        # if not self.mqtt_subscribers[ros_topic_name]:
-        #     if not (self.mqtt_subscribers[ros_topic_name]['ros_topic'] is None):
-        #         if self.mqtt_subscribers[ros_topic_name]['mqtt_topic'] == mqtt_topic:
-        #             # do nothing, return
-        #             return True
-        #         # if different, unsubscribe
-        #         self.client_mqtt.unsubscribe(self.mqtt_subscribers[ros_topic_name]['mqtt_topic'])
-        # else is empty or different mqtt_topic
-        # create topic handler
+        # ros seems to require a path starting always with "/". TODO: to be check if true
         ros_topic_name = "/" + ros_topic_name
+        # create topic handler
         ros_topic = roslibpy.Topic(self.client_ros, ros_topic_name, ros_msg_type)
         # set or update
         self.mqtt_subscribers[mqtt_topic] = self.create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback=None)
-        # advertise as publisher
+        # advertise as publisher in ros topic
         self.mqtt_subscribers[mqtt_topic]['ros_topic'].advertise()
+        # perform subscription to mqtt topic
         self.client_mqtt.subscribe(mqtt_topic, qos)
         return True
 
     @staticmethod
     def create_mapping(ros_topic, ros_msg_type, mqtt_topic, callback):
+        """
+        Return a dictionary containing \:
+
+        +-------------+---------------------------------------------------------+
+        |ros_topic    | a roslibpy.Topic                                        |
+        +-------------+---------------------------------------------------------+
+        |ros_msg_type | message type of ROS topic                               |
+        +-------------+---------------------------------------------------------+
+        |mqtt_topic   | mqtt corresponding topic where message is to be forward |
+        +-------------+---------------------------------------------------------+
+        |callback     | None. Not currently used                                |
+        +-------------+---------------------------------------------------------+
+
+        Used to store corresponding counterparts from ros <-> mqtt
+
+        Return:
+            The dictionary created
+        """
         return {'ros_topic': ros_topic, 'ros_msg_type': ros_msg_type, 'mqtt_topic': mqtt_topic,
                 'callback': callback}
 
+
 class SimpleController(MqttRosBridge):
+    """
+    A simple controller class example to be used with for testing purposes.
+    Uses the subclass MqttRosBridge.
+    Must implement the desired function callbacks for use with ros subscribed topics
+    """
 
     def __init__(self, debug=False):
         super().__init__(debug)
@@ -231,19 +313,42 @@ class SimpleController(MqttRosBridge):
         while len(self.client_mqtt._out_messages):
             sleep(0.01)
         self.client_mqtt.disconnect()
+        # give some time to forward all messages to ros topics
+        sleep(1)
+        self.client_ros.close()
         return
 
+    # ---------------------------------------------------------------------------
+    # Defines of callback functions
+    # ---------------------------------------------------------------------------
     def send_target_velocity(self, message):
+        """
+        Callback for received target velocity. Currently message is received as a string.
+        Value must be a signed int32 compatible value
+
+        Args:
+            message: ros message received.
+        Return:
+            a boolean if correctly forwarded or not.
+        """
         self.log_info('Received target velocity: {0}'.format(message['data']))
-        var = int(message['data'])
+        try:
+            var = int(message['data'])
+        except ValueError:
+            self.log_info("Not a valid value received: {0}".format(message['data']))
+            return False
+        # forward it as signed int32 to corresponding topic
         self.client_mqtt.publish(sinamics_topics['target_velocity_write'],
                                  payload=var.to_bytes(4, 'little', signed=True))
+        return True
+
 
 def main():
     global controller
     # ---------------------------------------------------------------------------
     # define signal handlers for systemd signals
     # ---------------------------------------------------------------------------
+
     def signal_handler(signum, frame):
         if signum == signal.SIGINT:
             logging.info('Received signal INTERRUPT... exiting now')
@@ -251,12 +356,10 @@ def main():
             logging.info('Received signal TERM... exiting now')
         controller.client_mqtt.clean_exit()
         return
-    # ---------------------------------------------------------------------------
-    # Defines of callback functions
-    # ---------------------------------------------------------------------------
+
 
     def on_message(client, userdata, message):
-        # TODO: parse messages
+        # TODO: define more messages. Currently for testing is only used the velocity
         controller.log_debug("Received message :" + str(message.payload) + " on topic "
                              + message.topic + " with QoS " + str(message.qos))
         if message.topic == sinamics_topics['velocity']:
@@ -264,24 +367,23 @@ def main():
             ros_message = roslibpy.Message({'data': str(number)})
             controller.mqtt_subscribers[sinamics_topics['velocity']]['ros_topic'].publish(ros_message)
 
-
-    def on_connect(self, userdata, flags, rc):
+    def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            self.mqtt_online = True
+            controller.mqtt_online = True
             # successfully connected
             message = roslibpy.Message({'data': 'connected'})
-            self.client_ros.publish(general_topics['mqtt_ros'], message)
+            controller.client_ros.publish(general_topics['mqtt_ros'], message)
             # now add mqttLog to root logger to enable it
             logging.getLogger('').addHandler(mqtt_logger)
             # TODO subscribe to other topics
         else:
-            self.log_info('Unexpected result on publish: rc={0}'.format(rc))
+            controller.log_info('Unexpected result on publish: rc={0}'.format(rc))
         return
 
-    def on_disconnect(self, userdata, rc):
+    def on_disconnect(client, userdata, rc):
         if rc != 0:
-            self.log_info("Unexpected MQTT disconnection. Will auto-reconnect")
-        self.mqtt_online = False
+            controller.log_info("Unexpected MQTT disconnection. Will auto-reconnect")
+        controller.mqtt_online = False
 
     # ---------------------------------------------------------------------------
     # end of callback defines
@@ -379,12 +481,15 @@ def main():
             return
 
     # create ros to mqtt for target velocity
+    # orders come from ros, so it must be subscribed to write topic
     controller.add_ros_to_mqtt(sinamics_topics['target_velocity_write'], 'std_msgs/String',
                                sinamics_topics['target_velocity_write'], controller.send_target_velocity)
     # create mqtt to ros for velocity
     controller.add_mqtt_to_ros(sinamics_topics['velocity'], 'std_msgs/String', sinamics_topics['velocity'])
 
-    signal.signal(signal.SIGINT, signal.default_int_handler)
+    # twisted overrides default signal handles, redirect it to  defined signal_handler function
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     logging.info('waiting a bit to connect to server...')
     sleep(3)
