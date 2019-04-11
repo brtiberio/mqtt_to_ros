@@ -6,3 +6,7 @@ venv/
 __pycache__/
 
 docs/_build/
+
+mqtt_controller\.log
+
+*.log
