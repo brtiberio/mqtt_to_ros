@@ -118,6 +118,8 @@ class MqttRosBridge:
 
         self.client_ros = roslibpy.Ros(host=hostname, port=port)
         self.client_ros.on_ready(self.ros_on_ready)
+        # TODO: check if this works
+        self.client_ros.on('close', self.ros_on_close)
 
     def ros_on_ready(self):
         """
@@ -128,6 +130,14 @@ class MqttRosBridge:
             self.log_info('ROS client is online')
         else:
             self.log_info('ROS client is offline')
+
+    def ros_on_close(self):
+        """
+        Set status on closed websocket connect.
+        TODO: to be confirmed if it works as expect or not for example on connection lost.
+
+        """
+        self.ros_online = False
 
     def log_info(self, message=None):
         """ Log a message
@@ -492,7 +502,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     logging.info('waiting a bit to connect to server...')
-    sleep(3)
+    sleep(2)
 
     try:
         print("Ctrl+C to exit... ")
@@ -506,6 +516,8 @@ def main():
     finally:
         controller.client_ros.terminate()
         controller.clean_exit()
+        # wait for everything to be done
+        sleep(1)
     return
 
 
