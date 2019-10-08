@@ -6,7 +6,7 @@
 Welcome to ROS to MQTT Controller Sample documentation!
 =======================================================
 
-An ROS to MQTT sample example class
+A ROS to MQTT sample example class
 -----------------------------------
 
 Simple class to perform a few tests with ROS to MQTT bridge service.
